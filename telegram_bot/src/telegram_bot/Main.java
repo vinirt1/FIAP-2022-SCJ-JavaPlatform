@@ -16,7 +16,7 @@ public class Main {
 
 	public static void main(String[] args) {
 		// Criacao do objeto bot com as informacoes de acesso.
-		TelegramBot bot = new TelegramBot("SEU_TOKEN_ACESSO");
+		TelegramBot bot = new TelegramBot("5264731114:AAEgnaETiA4Co5IBzquVmG2qeSWqa-9kyrs");
 
 		// Objeto responsavel por receber as mensagens.
 		GetUpdatesResponse updatesResponse;
@@ -46,7 +46,9 @@ public class Main {
 				// Atualizacao do off-set.
 				m = update.updateId() + 1;
 
-				System.out.println("Recebendo mensagem: " + update.message().text());
+				// Recupera mensagem do usu√°rio
+				final String userMessage = update.message().text();
+				System.out.println("Recebendo mensagem: " + userMessage);
 
 				// Envio de "Escrevendo" antes de enviar a resposta.
 				baseResponse = bot.execute(new SendChatAction(update.message().chat().id(), ChatAction.typing.name()));
@@ -54,8 +56,10 @@ public class Main {
 				// Verificacao de acao de chat foi enviada com sucesso.
 				System.out.println("Resposta de Chat Action Enviada? " + baseResponse.isOk());
 
+				final String responseMessage = new BotResponse().getBotResponseMessage(userMessage);
+
 				// Envio da mensagem de resposta.
-				sendResponse = bot.execute(new SendMessage(update.message().chat().id(), "N„o entendi..."));
+				sendResponse = bot.execute(new SendMessage(update.message().chat().id(), responseMessage));
 
 				// Verificacao de mensagem enviada com sucesso.
 				System.out.println("Mensagem Enviada? " + sendResponse.isOk());
