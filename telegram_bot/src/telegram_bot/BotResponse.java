@@ -44,9 +44,9 @@ public class BotResponse {
             case START:
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.append("Olá, seja bem vindo. Olha todas as coisas que consigo fazer pra te ajudar:\n \n");
-                stringBuilder.append("1 - Adivinhar a idade da pessoa à partir do seu nome;\n");
-                stringBuilder.append("2 - Adivinhar o seu sexo da pessoa à partir do seu nome;\n");
-                stringBuilder.append("3 - Sugerir atividades para te tirar do tédio;\n \n");
+                stringBuilder.append("1 - Adivinhar a idade de uma pessoa à partir do seu nome;\n");
+                stringBuilder.append("2 - Adivinhar o seu sexo de uma pessoa à partir do seu nome;\n");
+                stringBuilder.append("3 - Sugerir atividades pra te tirar do tédio;\n \n");
                 stringBuilder.append("Digite a opção ou o assunto desejado para que eu possa te atender.\n \n");
                 stringBuilder.append("A qualquer momento digite /end para finalizar a nossa conversa \n \n");
                 stringBuilder.append("ATENÇÃO: Sempre que quiser sair de um fluxo e acessar uma nova opção digite /start");
@@ -119,11 +119,11 @@ public class BotResponse {
         // TODO - Tirar essa marreta e recuperar qual API chamar a partir da opção escolhida pelo usuário (objeto ChatFlow)
         if ("Marcos".equals(userMessage)) {
             AgifyApiResponse agifyApiResponse = new AgifyApi().getNameInfo(userMessage);
-            responseMessage = "Bem, eu chuto que a idade do " + agifyApiResponse.getName() + " é " + agifyApiResponse.getAge() + " anos. Acertei?";
+            responseMessage = "Bem, eu acho que a idade do " + agifyApiResponse.getName() + " é " + agifyApiResponse.getAge() + " anos. Acertei?";
         } else {
             GenderizeApiResponse genderizeApiResponse = new GenderizeApi().getNameInfo(userMessage);
             final String sexDiscovered = "male".equals(genderizeApiResponse.getGender())  ? "masculino" : "feminino";
-            responseMessage = "Bem, eu chuto que o sexo do(a) " + genderizeApiResponse.getName() + " é " + sexDiscovered + ". Acertei?";
+            responseMessage = "Bem, eu acho que o sexo do(a) " + genderizeApiResponse.getName() + " é " + sexDiscovered + ". Acertei?";
         }
 
         return responseMessage;
