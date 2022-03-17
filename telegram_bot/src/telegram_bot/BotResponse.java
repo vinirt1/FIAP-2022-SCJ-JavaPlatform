@@ -2,8 +2,14 @@ package telegram_bot;
 
 import java.util.regex.Pattern;
 
+import telegram_bot.exception.TelegramBotException;
+import telegram_bot.integration.AgifyApi;
 import telegram_bot.integration.BoredApi;
+import telegram_bot.integration.GenderizeApi;
+import telegram_bot.model.AgifyApiResponse;
 import telegram_bot.model.BoredApiResponse;
+import telegram_bot.model.ChatFlow;
+import telegram_bot.model.GenderizeApiResponse;
 
 public class BotResponse {
 
@@ -12,7 +18,7 @@ public class BotResponse {
 
     private static final String DEFAULT_FRIENDLY_UNKNOWN_USER_MESSAGE = "Desculpe... não consegui entender esse comando :(";
 
-    public String getBotResponseMessage(String userMessage) {
+    public String getBotResponseMessage(final String userMessage, final ChatFlow chatFlow) throws TelegramBotException {
 
         if (BotUtil.isCommandMessage(userMessage)) {
             return getBotCommandResponseMessage(userMessage);
@@ -22,10 +28,16 @@ public class BotResponse {
             return getBotNumberResponseMessage(userMessage);
         }
 
-        return getBotPatternResponseMessage(userMessage);
+        final boolean isOptionSelected = chatFlow.getInterationCount() <= 2;
+
+        if (isOptionSelected) {
+            return getBotPatternResponseMessage(userMessage);
+        }
+
+        return getBotGivenNameResponseMessage(userMessage);
     }
 
-    private String getBotCommandResponseMessage(String userMessage) {
+    private String getBotCommandResponseMessage(final String userMessage) {
         String responseMessage = DEFAULT_FRIENDLY_UNKNOWN_USER_MESSAGE;
 
         switch (userMessage) {
@@ -36,7 +48,8 @@ public class BotResponse {
                 stringBuilder.append("2 - Adivinhar o seu sexo da pessoa à partir do seu nome;\n");
                 stringBuilder.append("3 - Sugerir atividades para te tirar do tédio;\n \n");
                 stringBuilder.append("Digite a opção ou o assunto desejado para que eu possa te atender.\n \n");
-                stringBuilder.append("A qualquer momento digite /end para finalizar a nossa conversa");
+                stringBuilder.append("A qualquer momento digite /end para finalizar a nossa conversa \n \n");
+                stringBuilder.append("ATENÇÃO: Sempre que quiser sair de um fluxo e acessar uma nova opção digite /start");
 
                 responseMessage = stringBuilder.toString();
                 break;
@@ -50,7 +63,7 @@ public class BotResponse {
         return responseMessage;
     }
 
-    private String getBotNumberResponseMessage(String userMessage) {
+    private String getBotNumberResponseMessage(final String userMessage) throws TelegramBotException {
         String responseMessage = DEFAULT_FRIENDLY_UNKNOWN_USER_MESSAGE;
 
         final int AGE_COMMAND_NUMBER = 1;
@@ -78,7 +91,7 @@ public class BotResponse {
         return responseMessage;
     }
 
-    private String getBotPatternResponseMessage(String userMessage) {
+    private String getBotPatternResponseMessage(final String userMessage) throws TelegramBotException {
         final String AGE_PATTERN_EXPECTED_WORLD = "idade";
         final String SEX_PATTERN_EXPECTED_WORLD = "sexo";
         final String ACTIVITY_PATTERN_EXPECTED_WORLD = "atividade";
@@ -89,7 +102,6 @@ public class BotResponse {
 
         if (isActivityPattern) {
             BoredApiResponse boredApiResponse = new BoredApi().getActivity();
-
             return getFormattedActivityTip(boredApiResponse);
         }
         if (isAgePattern) {
@@ -99,6 +111,22 @@ public class BotResponse {
         } else {
             return DEFAULT_FRIENDLY_UNKNOWN_USER_MESSAGE;
         }
+    }
+
+    private String getBotGivenNameResponseMessage(final String userMessage) throws TelegramBotException {
+        String responseMessage = DEFAULT_FRIENDLY_UNKNOWN_USER_MESSAGE; 
+
+        // TODO - Tirar essa marreta e recuperar qual API chamar a partir da opção escolhida pelo usuário (objeto ChatFlow)
+        if ("Marcos".equals(userMessage)) {
+            AgifyApiResponse agifyApiResponse = new AgifyApi().getNameInfo(userMessage);
+            responseMessage = "Bem, eu chuto que a idade do " + agifyApiResponse.getName() + " é " + agifyApiResponse.getAge() + " anos. Acertei?";
+        } else {
+            GenderizeApiResponse genderizeApiResponse = new GenderizeApi().getNameInfo(userMessage);
+            final String sexDiscovered = "male".equals(genderizeApiResponse.getGender())  ? "masculino" : "feminino";
+            responseMessage = "Bem, eu chuto que o sexo do(a) " + genderizeApiResponse.getName() + " é " + sexDiscovered + ". Acertei?";
+        }
+
+        return responseMessage;
     }
 
     private String getFormattedActivityTip(final BoredApiResponse boredApiResponse) {

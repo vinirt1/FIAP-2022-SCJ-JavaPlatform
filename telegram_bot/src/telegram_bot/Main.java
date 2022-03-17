@@ -12,6 +12,9 @@ import com.pengrad.telegrambot.response.BaseResponse;
 import com.pengrad.telegrambot.response.GetUpdatesResponse;
 import com.pengrad.telegrambot.response.SendResponse;
 
+import telegram_bot.exception.TelegramBotException;
+import telegram_bot.model.ChatFlow;
+
 public class Main {
 
 	public static void main(String[] args) {
@@ -31,6 +34,9 @@ public class Main {
 		// pendentes na fila.
 		int m = 0;
 
+		// Instancia fluxo do chat, objeto que controla estado, mensagem atual, anterior, quantidade de iterações, etc;
+		ChatFlow chatFlow = new ChatFlow();
+
 		// Loop infinito pode ser alterado por algum timer de intervalo curto.
 		while (true) {
 			// Executa comando no Telegram para obter as mensagens pendentes a partir de um
@@ -46,9 +52,22 @@ public class Main {
 				// Atualizacao do off-set.
 				m = update.updateId() + 1;
 
+				// Atualiza numero de iteracoes
+				final int interationCount = chatFlow.getInterationCount();
+				chatFlow.setInterationCount(interationCount + 1);
+				System.out.println("Número da iteração: " + interationCount);
+
+				// A cada iteração seta a mensagem anterior como a mensagem atual da última iteração
+				chatFlow.setPreviousMessage(chatFlow.getCurrentMessage());
+
 				// Recupera mensagem do usuário
 				final String userMessage = update.message().text();
 				System.out.println("Recebendo mensagem: " + userMessage);
+
+				// Se a mensagem digitada for /start reinicia iterações
+				if ("/start".equals(userMessage)) {
+					chatFlow.setInterationCount(1);
+				}
 
 				// Envio de "Escrevendo" antes de enviar a resposta.
 				baseResponse = bot.execute(new SendChatAction(update.message().chat().id(), ChatAction.typing.name()));
@@ -56,7 +75,17 @@ public class Main {
 				// Verificacao de acao de chat foi enviada com sucesso.
 				System.out.println("Resposta de Chat Action Enviada? " + baseResponse.isOk());
 
-				final String responseMessage = new BotResponse().getBotResponseMessage(userMessage);
+				String responseMessage;
+				try {
+					// recupera mensagem a ser respondida ao usuário
+					responseMessage = new BotResponse().getBotResponseMessage(userMessage, chatFlow);
+
+					// Seta mensagem atual no controle de fluxo
+					chatFlow.setCurrentMessage(responseMessage);
+				} catch (TelegramBotException e) {
+					e.printStackTrace();
+					responseMessage = "Ops... aconteceu um erro ao atender a sua mensagem :( Tente novamente...";
+				}
 
 				// Envio da mensagem de resposta.
 				sendResponse = bot.execute(new SendMessage(update.message().chat().id(), responseMessage));

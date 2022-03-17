@@ -8,16 +8,14 @@ import java.net.http.HttpResponse;
 
 import com.google.gson.Gson;
 
+import telegram_bot.exception.TelegramBotException;
 import telegram_bot.model.BoredApiResponse;
 
 public class BoredApi {
 
     private static final String BORED_API_URI = "https://www.boredapi.com/api/activity";
 
-    //https://api.genderize.io/?name=luc
-    //https://api.agify.io/?name=vinicius
-
-    public BoredApiResponse getActivity() {
+    public BoredApiResponse getActivity() throws TelegramBotException {
 
         // instancia um http client
         HttpClient client = HttpClient.newHttpClient();
@@ -26,19 +24,19 @@ public class BoredApi {
         HttpRequest request = HttpRequest.newBuilder(URI.create(BORED_API_URI))
                 .header("accept", "application/json")
                 .build();
-
-        // usa o cliente para disparar o
         HttpResponse<String> response;
         BoredApiResponse boredApiResponse;
 
         try {
+            // usa o cliente para disparar o request
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            // faz parte do Json para objeto Java
             boredApiResponse = new Gson().fromJson((String) response.body(), BoredApiResponse.class);
 
             return boredApiResponse;
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            return new BoredApiResponse();
+           throw new TelegramBotException();
         }
     }
 }
